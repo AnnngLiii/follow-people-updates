@@ -13,6 +13,7 @@ This repository is designed for local Codex-style automation, but the scripts ar
 - `skills/follow-people-updates/scripts/generate_daily_digest.py`: optional digest generator built on top of the fetcher.
 - `skills/follow-people-updates/references/source-types.md`: registry source schema and source-type notes.
 - `skills/follow-people-updates/assets/tracking-registry.example.json`: safe example registry.
+- `skills/follow-people-updates/assets/focus-profile.example.json`: safe example focus and output profile.
 - `scripts/follow_people_updates_fetch.sh`: portable wrapper for the fetcher.
 - `automations/daily-people-updates.example.toml`: example automation prompt and schedule.
 
@@ -23,6 +24,7 @@ The public repo does not include personal run history, automation memory, local 
 Private local files are ignored by default:
 
 - `skills/follow-people-updates/assets/tracking-registry.json`
+- `skills/follow-people-updates/assets/focus-profile.json`
 - `news/daily-digest-*.md`
 - `.env`
 - `.codex/`
@@ -46,6 +48,13 @@ cp skills/follow-people-updates/assets/tracking-registry.example.json \
   skills/follow-people-updates/assets/tracking-registry.json
 ```
 
+Create your private focus profile from the example:
+
+```bash
+cp skills/follow-people-updates/assets/focus-profile.example.json \
+  skills/follow-people-updates/assets/focus-profile.json
+```
+
 Preview recent updates without mutating seen-item state:
 
 ```bash
@@ -64,34 +73,65 @@ The wrapper resolves paths relative to the repository root. If you keep your reg
 export FOLLOW_PEOPLE_UPDATES_REGISTRY=/absolute/path/to/tracking-registry.json
 ```
 
-## Customize The Digest Generator
+## Customize Tracking And Output
 
-`skills/follow-people-updates/scripts/generate_daily_digest.py` is an opinionated example, not a fixed product. It includes sample focus targets so users can see where to edit.
+This project has two user-owned inputs:
 
-This script reads your private `skills/follow-people-updates/assets/tracking-registry.json`, so create that file from the example before running it.
+- `tracking-registry.json`: who to track and which sources to scan.
+- `focus-profile.json`: what counts as relevant and how the digest is formatted.
 
-Common places to customize:
+Both files are ignored by git. Start from the example files and edit your private copies.
 
-- `FOCUS_KEYWORDS`: the main topic filter. Replace the example AI terms with your own focus, such as climate tech, biotech, security, education, policy, investing, or a specific product category.
-- `SECONDARY_INSIGHT_RULES`: optional "why this matters" rules. Change the labels, keywords, and notes to match your project goals or audience.
-- `recommended_tracks()`: example people, labs, companies, or channels to suggest adding next.
-- `prune_candidates()`: low-signal heuristics for suggesting which tracked people or sources to downgrade.
-- `format_item_block(item)`: the Markdown output structure for each delivered item.
+### Focus Profile
 
-The default `format_item_block(item)` writes:
+Edit `skills/follow-people-updates/assets/focus-profile.json` when you want to change relevance and output style.
+
+Common fields:
+
+- `focus_keywords`: the main topic filter. Replace the example AI terms with your own focus, such as climate tech, biotech, security, education, policy, investing, or a specific product category.
+- `secondary_insight_rules`: optional "why this matters" rules. Change the labels, keywords, and notes to match your project goals or audience.
+- `recommended_tracks`: example people, labs, companies, or channels to suggest adding next.
+- `low_signal_keywords`: heuristics for suggesting which tracked people or sources to downgrade.
+- `item_template`: the Markdown output structure for each delivered item.
+
+The default `item_template` writes:
 
 ```text
 ### Person | Title
-- 日期：YYYY-MM-DD
-- 来源类型：Source label (source-type)
-- 背景：...
-- 做了什么：...
-- 方法：...
-- 结果：...
-- 来源链接：...
+- Date: YYYY-MM-DD
+- Source: Source label (source-type)
+- Background: ...
+- What changed: ...
+- Method: ...
+- Result: ...
+- Link: ...
 ```
 
-Change this function if you want a different format, language, section order, scoring field, short-form summary, or newsletter-ready output.
+Change the template if you want a different format, language, section order, scoring field, short-form summary, or newsletter-ready output. You usually do not need to edit Python for output-format changes.
+
+### Tracking Registry
+
+Edit `skills/follow-people-updates/assets/tracking-registry.json` when you want to add, remove, enable, or disable tracked people and sources.
+
+User input requirements for each tracked person:
+
+- `name`: the public name to show in the digest.
+- `kind`: one of `scholar`, `engineer`, `mixed`, or `other`.
+- `notes`: why you are tracking this person or organization.
+- `sources`: one or more confirmed source endpoints.
+
+Do not rely on guessed sources for recurring automation. Manually confirm each URL or source parameter before adding it:
+
+- For GitHub users, confirm the username and use `github-user-events`.
+- For GitHub organizations, confirm the org slug and use `github-org-repos`.
+- For YouTube, confirm the official channel URL and use `youtube-channel`.
+- For arXiv, confirm the author name spelling and use `arxiv-author`.
+- For Crossref, confirm the author name is specific enough and expect noisier matches.
+- For Google Scholar, confirm the profile URL and `user` id from the URL.
+- For official blogs or news pages, prefer RSS/Atom feeds when available; otherwise use `news-index` or `web-page`.
+- For X/Twitter or pages without reliable public feeds, keep them as `web-page`; they are manual/deferred sources.
+
+The registry management commands below help edit the file, but they cannot verify identity by themselves. Treat the source URL or source parameter as user-confirmed input.
 
 Generate a digest from the current registry:
 
@@ -100,6 +140,8 @@ python3 skills/follow-people-updates/scripts/generate_daily_digest.py \
   --days 3 \
   --limit 5 \
   --max-items 10 \
+  --registry skills/follow-people-updates/assets/tracking-registry.json \
+  --focus-profile skills/follow-people-updates/assets/focus-profile.json \
   --output-dir news
 ```
 
@@ -191,4 +233,4 @@ Before committing your own fork, run:
 rg -n "(/Users/|Desktop/|CODEX_HOME|OPENAI_API_KEY|ANTHROPIC_API_KEY|GITHUB_TOKEN|GH_TOKEN|api[_-]?key|secret|password|token)" .
 ```
 
-Expected matches should be documentation references to environment variable names only. Do not commit real paths, credentials, private digest history, or your private `tracking-registry.json`.
+Expected matches should be documentation references to environment variable names only. Do not commit real paths, credentials, private digest history, your private `tracking-registry.json`, or your private `focus-profile.json`.

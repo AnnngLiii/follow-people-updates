@@ -18,43 +18,74 @@ SKILL_DIR = SCRIPT_DIR.parent
 FETCH_UPDATES_PATH = SCRIPT_DIR / "fetch_updates.py"
 YOUTUBE_TRANSCRIPT_PATH = SCRIPT_DIR / "fetch_youtube_transcript.py"
 REGISTRY_PATH = SKILL_DIR / "assets" / "tracking-registry.json"
+DEFAULT_FOCUS_PROFILE_PATH = SKILL_DIR / "assets" / "focus-profile.json"
+EXAMPLE_FOCUS_PROFILE_PATH = SKILL_DIR / "assets" / "focus-profile.example.json"
 USER_AGENT = "Mozilla/5.0"
 
-# Example focus profile. Replace these terms with the topics you actually care
-# about, such as climate tech, biotech, startups, education, security, or policy.
-FOCUS_KEYWORDS = [
-    "ai", "artificial intelligence", "llm", "language model", "vision-language",
-    "agent", "agentic", "reasoning", "benchmark", "evaluation", "alignment",
-    "safety", "ethics", "governance", "privacy", "research", "preprint",
-    "arxiv", "training", "pre-training", "inference", "retrieval", "rag",
-    "robot", "robotic", "embodied", "multimodal", "dataset", "foundation model",
-]
-
-# Example secondary insight rules. These turn a matched item into a short
-# "why this matters" note. Replace the labels, keywords, and notes with your
-# own project goals or audience needs.
-SECONDARY_INSIGHT_RULES = [
-    (
-        "Agent reliability and evaluation",
-        ["agent", "agentic", "reasoning", "benchmark", "evaluation", "collapse", "safety"],
-        "Use this to track how teams measure agent failures, reliability, and guardrail quality.",
-    ),
-    (
-        "Memory and personalization",
-        ["memory", "retrieval", "rag", "knowledge", "document", "personalization", "long-context"],
-        "Use this to watch patterns for retrieval, long-context workflows, and user-specific state.",
-    ),
-    (
-        "Applied workflow UX",
-        ["assistant", "workflow", "application", "product", "user", "enterprise"],
-        "Use this to identify product patterns that make AI tools easier to adopt in real work.",
-    ),
-    (
-        "Safety, policy, and governance",
-        ["safety", "ethics", "policy", "governance", "privacy", "harm", "bias", "risk"],
-        "Use this to follow work that changes deployment risk, compliance, or evaluation boundaries.",
-    ),
-]
+DEFAULT_FOCUS_PROFILE = {
+    "name": "AI research and product updates",
+    "focus_keywords": [
+        "ai", "artificial intelligence", "llm", "language model", "vision-language",
+        "agent", "agentic", "reasoning", "benchmark", "evaluation", "alignment",
+        "safety", "ethics", "governance", "privacy", "research", "preprint",
+        "arxiv", "training", "pre-training", "inference", "retrieval", "rag",
+        "robot", "robotic", "embodied", "multimodal", "dataset", "foundation model",
+    ],
+    "include_preference_score_matches": True,
+    "secondary_insight_rules": [
+        {
+            "label": "Agent reliability and evaluation",
+            "keywords": ["agent", "agentic", "reasoning", "benchmark", "evaluation", "collapse", "safety"],
+            "note": "Use this to track how teams measure agent failures, reliability, and guardrail quality.",
+        },
+        {
+            "label": "Memory and personalization",
+            "keywords": ["memory", "retrieval", "rag", "knowledge", "document", "personalization", "long-context"],
+            "note": "Use this to watch patterns for retrieval, long-context workflows, and user-specific state.",
+        },
+        {
+            "label": "Applied workflow UX",
+            "keywords": ["assistant", "workflow", "application", "product", "user", "enterprise"],
+            "note": "Use this to identify product patterns that make AI tools easier to adopt in real work.",
+        },
+        {
+            "label": "Safety, policy, and governance",
+            "keywords": ["safety", "ethics", "policy", "governance", "privacy", "harm", "bias", "risk"],
+            "note": "Use this to follow work that changes deployment risk, compliance, or evaluation boundaries.",
+        },
+    ],
+    "low_signal_keywords": ["marketing", "hiring", "fundraising", "career", "productivity", "event"],
+    "recommended_tracks": [
+        {
+            "name": "OpenAI",
+            "channels": "GitHub activity, official news",
+            "focus": "frontier model releases, agent products, platform capabilities",
+            "why": "Example target for tracking product launches, platform APIs, and agent workflows.",
+        },
+        {
+            "name": "Google DeepMind",
+            "channels": "GitHub activity, official blog",
+            "focus": "model research, multimodal reasoning, evaluation",
+            "why": "Example target for model research, benchmarks, and research-to-product translation.",
+        },
+    ],
+    "digest_filter_label": "current focus profile",
+    "main_empty_text": "No new items matched the current focus profile after dedupe and filtering.",
+    "secondary_section_title": "Secondary Insights",
+    "secondary_empty_text": "No items matched the secondary insight rules.",
+    "secondary_judgment_prompt": "Evaluate whether this changes product, research, market, investment, or learning priorities.",
+    "downgrade_note": "Current items look weakly related to the focus profile; consider lowering priority or removing this source.",
+    "item_template": [
+        "### {person_name} | {title}",
+        "- 日期：{published_date}",
+        "- 来源类型：{source_label} ({source_type})",
+        "- 背景：{background}",
+        "- 做了什么：{done}",
+        "- 方法：{method}",
+        "- 结果：{result}",
+        "- 来源链接：{url}"
+    ],
+}
 
 
 def load_fetch_updates_module():
@@ -78,6 +109,46 @@ def default_output_dir() -> Path:
     return Path.cwd() / "news"
 
 
+def default_focus_profile_path() -> Path:
+    override = os.environ.get("FOLLOW_PEOPLE_UPDATES_FOCUS_PROFILE")
+    if override:
+        return Path(override).expanduser()
+    if DEFAULT_FOCUS_PROFILE_PATH.exists():
+        return DEFAULT_FOCUS_PROFILE_PATH
+    return EXAMPLE_FOCUS_PROFILE_PATH
+
+
+def default_registry_path() -> Path:
+    override = os.environ.get("FOLLOW_PEOPLE_UPDATES_REGISTRY")
+    if override:
+        return Path(override).expanduser()
+    return REGISTRY_PATH
+
+
+def merge_focus_profile(profile):
+    merged = dict(DEFAULT_FOCUS_PROFILE)
+    if profile:
+        merged.update(profile)
+    for key in [
+        "focus_keywords",
+        "secondary_insight_rules",
+        "low_signal_keywords",
+        "recommended_tracks",
+        "item_template",
+    ]:
+        if not isinstance(merged.get(key), list):
+            merged[key] = DEFAULT_FOCUS_PROFILE[key]
+    return merged
+
+
+def load_focus_profile(path: Path = None):
+    profile_path = path or default_focus_profile_path()
+    if profile_path and profile_path.exists():
+        with profile_path.open("r", encoding="utf-8") as handle:
+            return merge_focus_profile(json.load(handle)), profile_path
+    return merge_focus_profile({}), None
+
+
 def parse_date(value: str):
     if not value:
         return None
@@ -96,9 +167,12 @@ def item_text(item):
     return " ".join(part for part in [item.get("title"), item.get("summary")] if part).lower()
 
 
-def is_focus_related(item):
+def is_focus_related(item, profile):
     text = item_text(item)
-    return any(keyword in text for keyword in FOCUS_KEYWORDS) or item.get("preference_score", 0) > 0
+    keywords = [keyword.lower() for keyword in profile.get("focus_keywords", [])]
+    if any(keyword in text for keyword in keywords):
+        return True
+    return bool(profile.get("include_preference_score_matches", True) and item.get("preference_score", 0) > 0)
 
 
 def split_summary_fields(summary: str):
@@ -386,7 +460,7 @@ def parse_claude_blog(url: str, day_dt: datetime):
     return items
 
 
-def collect_items(days: int, limit: int, no_write: bool):
+def collect_items(days: int, limit: int, no_write: bool, registry_path: Path = None):
     cmd = [
         "python3",
         str(FETCH_UPDATES_PATH),
@@ -399,7 +473,10 @@ def collect_items(days: int, limit: int, no_write: bool):
     ]
     if no_write:
         cmd.append("--no-write")
-    raw = subprocess.check_output(cmd, text=True)
+    env = os.environ.copy()
+    if registry_path:
+        env["FOLLOW_PEOPLE_UPDATES_REGISTRY"] = str(registry_path)
+    raw = subprocess.check_output(cmd, text=True, env=env)
     data = json.loads(raw)
     items = []
     for person in data["results"]:
@@ -413,8 +490,8 @@ def collect_items(days: int, limit: int, no_write: bool):
     return data.get("preferences", {}), items, data.get("results", [])
 
 
-def load_registry():
-    return json.loads(REGISTRY_PATH.read_text(encoding="utf-8"))
+def load_registry(path: Path):
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def summarize_scan_review(results, window_label: str):
@@ -434,10 +511,11 @@ def summarize_scan_review(results, window_label: str):
     return scanned_no_updates, failed, not_scanned
 
 
-def prune_candidates(registry, results):
+def prune_candidates(registry, results, profile):
     notes_by_name = {person["name"]: (person.get("notes") or "") for person in registry.get("people", [])}
     candidates = []
-    low_signal_keywords = ["marketing", "hiring", "fundraising", "career", "productivity", "event"]
+    low_signal_keywords = [keyword.lower() for keyword in profile.get("low_signal_keywords", [])]
+    focus_keywords = [keyword.lower() for keyword in profile.get("focus_keywords", [])]
     for person in results:
         combined = " ".join(
             filter(
@@ -448,50 +526,13 @@ def prune_candidates(registry, results):
             )
         ).lower()
         if any(keyword in combined for keyword in low_signal_keywords):
-            if not any(keyword in combined for keyword in FOCUS_KEYWORDS):
+            if not any(keyword in combined for keyword in focus_keywords):
                 candidates.append(person["person_name"])
     return sorted(set(candidates))
 
 
-def recommended_tracks():
-    return [
-        {
-            "name": "OpenAI",
-            "channels": "GitHub activity, official news",
-            "focus": "frontier model releases, agent products, platform capabilities",
-            "why": "Example target for tracking product launches, platform APIs, and agent workflows.",
-        },
-        {
-            "name": "Google DeepMind",
-            "channels": "GitHub activity, official blog",
-            "focus": "Gemini model research, multimodal reasoning, evaluation",
-            "why": "Example target for model research, benchmarks, and research-to-product translation.",
-        },
-        {
-            "name": "DeepSeek",
-            "channels": "GitHub activity, official site",
-            "focus": "open models, reasoning, training and inference engineering",
-            "why": "Example target for open model releases and infrastructure tradeoffs.",
-        },
-        {
-            "name": "Qwen",
-            "channels": "GitHub activity, official site",
-            "focus": "open model families, agent/tool use, long context",
-            "why": "Example target for agent capabilities and practical open-source releases.",
-        },
-        {
-            "name": "Kimi",
-            "channels": "GitHub activity, official site",
-            "focus": "consumer AI assistants, retrieval, long-context UX",
-            "why": "Example target for product-layer assistant and search experiences.",
-        },
-        {
-            "name": "MiniMax",
-            "channels": "GitHub activity, official site",
-            "focus": "multimodal models and consumer AI products",
-            "why": "Example target for multimodal and consumer-facing AI patterns.",
-        },
-    ]
+def recommended_tracks(profile):
+    return profile.get("recommended_tracks", [])
 
 
 def read_existing_markers(output_dir: Path, exclude_path: Path = None):
@@ -507,9 +548,12 @@ def read_existing_markers(output_dir: Path, exclude_path: Path = None):
     return markers
 
 
-def build_secondary_insight(item):
+def build_secondary_insight(item, profile):
     text = item_text(item)
-    for label, keywords, note in SECONDARY_INSIGHT_RULES:
+    for rule in profile.get("secondary_insight_rules", []):
+        label = rule.get("label")
+        keywords = [keyword.lower() for keyword in (rule.get("keywords") or [])]
+        note = rule.get("note")
         if any(keyword in text for keyword in keywords):
             return label, note
     return None, None
@@ -555,23 +599,32 @@ def enrich_item(item, transcript_state):
     return item
 
 
-def format_item_block(item):
-    """Customize this function to change the digest output structure."""
+def format_item_block(item, profile):
+    """Render one digest item using the profile's item_template."""
     published = parse_date(item.get("published_at"))
     published_str = published.strftime("%Y-%m-%d") if published else "日期未明确"
     fields = item.get("summary_fields") or split_summary_fields(item.get("summary"))
-    return "\n".join(
-        [
-            f"### {item['person_name']} | {item['title']}",
-            f"- 日期：{published_str}",
-            f"- 来源类型：{item.get('source_label')} ({item.get('source_type')})",
-            f"- 背景：{fields['background']}",
-            f"- 做了什么：{fields['done']}",
-            f"- 方法：{fields['method']}",
-            f"- 结果：{fields['result']}",
-            f"- 来源链接：{item.get('url') or '未明确说明'}",
-        ]
-    )
+    values = {
+        "person_name": item.get("person_name") or "Unknown",
+        "title": item.get("title") or "Untitled",
+        "published_date": published_str,
+        "source_label": item.get("source_label") or "unknown source",
+        "source_type": item.get("source_type") or "unknown",
+        "background": fields["background"],
+        "done": fields["done"],
+        "method": fields["method"],
+        "result": fields["result"],
+        "url": item.get("url") or "未明确说明",
+        "summary": item.get("summary") or "",
+        "preference_score": item.get("preference_score", 0),
+    }
+    rendered = []
+    for line in profile.get("item_template", DEFAULT_FOCUS_PROFILE["item_template"]):
+        try:
+            rendered.append(line.format(**values))
+        except KeyError:
+            rendered.append(line)
+    return "\n".join(rendered)
 
 
 def main():
@@ -581,6 +634,8 @@ def main():
     parser.add_argument("--max-items", type=int, default=0, help="Maximum digest items to include; 0 means no cap.")
     parser.add_argument("--no-write-seen", action="store_true")
     parser.add_argument("--output-dir", type=Path, default=None)
+    parser.add_argument("--registry", type=Path, default=None, help="Path to a tracking-registry JSON file.")
+    parser.add_argument("--focus-profile", type=Path, default=None, help="Path to a focus-profile JSON file.")
     args = parser.parse_args()
 
     today = datetime.now(timezone.utc)
@@ -589,14 +644,16 @@ def main():
     output_path = output_dir / f"daily-digest-{day_label}.md"
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    preferences, items, raw_results = collect_items(args.days, args.limit, args.no_write_seen)
-    registry = load_registry()
+    registry_path = args.registry.expanduser() if args.registry else default_registry_path()
+    preferences, items, raw_results = collect_items(args.days, args.limit, args.no_write_seen, registry_path)
+    registry = load_registry(registry_path)
+    focus_profile, focus_profile_path = load_focus_profile(args.focus_profile.expanduser() if args.focus_profile else None)
     manual_items = []
     manual_items.extend(parse_github_trending("https://github.com/trending", today))
     manual_items.extend(parse_claude_blog("https://claude.com/blog", today))
     items.extend(manual_items)
 
-    focus_items = [item for item in items if is_focus_related(item)]
+    focus_items = [item for item in items if is_focus_related(item, focus_profile)]
     focus_items.sort(
         key=lambda item: (
             item.get("preference_score", 0),
@@ -617,20 +674,22 @@ def main():
 
     secondary_items = []
     for item in focus_items:
-        label, note = build_secondary_insight(item)
+        label, note = build_secondary_insight(item, focus_profile)
         if label:
             secondary_items.append((item, label, note))
     secondary_items = secondary_items[:5]
     window_label = "最近24小时" if args.days == 1 else f"最近{args.days}天"
     scanned_no_updates, failed_sources, not_scanned = summarize_scan_review(raw_results, window_label)
-    prune_list = prune_candidates(registry, raw_results)
-    recommendations = recommended_tracks()
+    prune_list = prune_candidates(registry, raw_results, focus_profile)
+    recommendations = recommended_tracks(focus_profile)
 
     lines = [
         f"# Daily Digest {day_label}",
         "",
         f"- 生成时间：{today.isoformat()}",
-        f"- 过滤范围：仅保留当前关注主题相关信息；可在脚本顶部的 `FOCUS_KEYWORDS` 中调整。",
+        f"- Focus profile：{focus_profile.get('name') or 'Untitled profile'}",
+        f"- Focus profile path：{focus_profile_path or 'built-in default'}",
+        f"- 过滤范围：仅保留 `{focus_profile.get('digest_filter_label')}` 相关信息；可在 focus profile JSON 中调整。",
         f"- 时间窗口：{window_label}（按执行时刻向前回看）。",
         f"- 偏好：{', '.join(preferences.get('themes', [])) or '无'}",
         f"- Source 上限：每个 source 最多抓 {args.limit} 条。",
@@ -641,18 +700,18 @@ def main():
     ]
 
     if not focus_items:
-        lines.append("本次没有新的关注主题相关条目通过去重与筛选。")
+        lines.append(focus_profile.get("main_empty_text") or DEFAULT_FOCUS_PROFILE["main_empty_text"])
     else:
         for item in focus_items:
-            lines.append(format_item_block(item))
+            lines.append(format_item_block(item, focus_profile))
             lines.append("")
 
     lines.extend([
-        "## Secondary Insights",
+        f"## {focus_profile.get('secondary_section_title') or DEFAULT_FOCUS_PROFILE['secondary_section_title']}",
         "",
     ])
     if not secondary_items:
-        lines.append("本次没有命中 secondary insight 规则的新条目。")
+        lines.append(focus_profile.get("secondary_empty_text") or DEFAULT_FOCUS_PROFILE["secondary_empty_text"])
     else:
         for item, label, note in secondary_items:
             lines.extend(
@@ -660,7 +719,7 @@ def main():
                     f"### {item['person_name']} | {item['title']}",
                     f"- 重点关注：{label}",
                     f"- 启发：{note}",
-                    f"- 进一步判断：按你的项目目标评估它是否影响产品、研究、市场、投资或学习优先级。",
+                    f"- 进一步判断：{focus_profile.get('secondary_judgment_prompt') or DEFAULT_FOCUS_PROFILE['secondary_judgment_prompt']}",
                     f"- 来源链接：{item.get('url') or '未明确说明'}",
                     "",
                 ]
@@ -690,7 +749,7 @@ def main():
     ])
     if prune_list:
         for name in prune_list:
-            lines.append(f"- {name}：当前内容与关注主题关联偏弱，可考虑移出主追踪列表或降低优先级。")
+            lines.append(f"- {name}：{focus_profile.get('downgrade_note') or DEFAULT_FOCUS_PROFILE['downgrade_note']}")
     else:
         lines.append("- 暂无明显建议停更的人。")
 

@@ -3,9 +3,11 @@ id = "daily-people-updates"
 kind = "cron"
 name = "Daily people updates"
 prompt = """
-Use `skills/follow-people-updates/assets/tracking-registry.json` as the tracked people registry source of truth every run.
+Use `skills/follow-people-updates/assets/tracking-registry.json` as the tracked people and source registry every run. Treat tracked people and source endpoints as user-confirmed inputs; do not assume guessed profiles, channels, author queries, or feeds are correct without user confirmation.
 
-For scripted fetches, set `FOLLOW_PEOPLE_UPDATES_REGISTRY` to that path and prefer the wrapper `scripts/follow_people_updates_fetch.sh`, which invokes `skills/follow-people-updates/scripts/fetch_updates.py`.
+Use `skills/follow-people-updates/assets/focus-profile.json` as the digest focus profile. It controls relevance keywords, secondary insight rules, recommended tracks, low-signal heuristics, and item output templates.
+
+For scripted fetches, set `FOLLOW_PEOPLE_UPDATES_REGISTRY` to the registry path and `FOLLOW_PEOPLE_UPDATES_FOCUS_PROFILE` to the focus profile path. Prefer the wrapper `scripts/follow_people_updates_fetch.sh`, which invokes `skills/follow-people-updates/scripts/fetch_updates.py`.
 
 Use `FOLLOW_PEOPLE_UPDATES_REQUEST_TIMEOUT=8` and `FOLLOW_PEOPLE_UPDATES_SOURCE_TIMEOUT=12` unless there is a concrete reason to override them. Run the structured fetch as `--json --new-only --days 3 --limit 20` and allow up to 180 seconds of wall-clock wait before declaring it failed.
 
@@ -15,7 +17,7 @@ Only deliver items from the last 3 days that have not been delivered in previous
 
 Append the current run to `news/daily-digest-YYYY-MM-DD.md` in Markdown. If no new items remain after dedupe, append a short note saying no new items were delivered.
 
-For each delivered item, format the output as: person name, output title, a short introduction with background, what was done, method, and result, then the source link. Prefer primary sources and official pages when expanding sparse feed metadata.
+For each delivered item, follow the focus profile's `item_template` when available. Prefer primary sources and official pages when expanding sparse feed metadata.
 
 If the structured fetch truly fails, re-check affected recoverable source types from the registry, especially `youtube-channel`, `google-scholar`, `news-index`, and other machine-readable network sources, using targeted preview checks (`--no-write`) or direct source-page verification as needed.
 """

@@ -1,0 +1,116 @@
+{
+  "name": "AI research and product updates",
+  "focus_keywords": [
+    "ai",
+    "artificial intelligence",
+    "llm",
+    "language model",
+    "agent",
+    "agentic",
+    "reasoning",
+    "benchmark",
+    "evaluation",
+    "safety",
+    "governance",
+    "privacy",
+    "research",
+    "preprint",
+    "arxiv",
+    "training",
+    "inference",
+    "retrieval",
+    "rag",
+    "robotics",
+    "multimodal",
+    "dataset",
+    "foundation model"
+  ],
+  "include_preference_score_matches": true,
+  "secondary_insight_rules": [
+    {
+      "label": "Agent reliability and evaluation",
+      "keywords": [
+        "agent",
+        "agentic",
+        "reasoning",
+        "benchmark",
+        "evaluation",
+        "safety"
+      ],
+      "note": "Use this to track how teams measure agent failures, reliability, and guardrail quality."
+    },
+    {
+      "label": "Memory and personalization",
+      "keywords": [
+        "memory",
+        "retrieval",
+        "rag",
+        "knowledge",
+        "personalization",
+        "long-context"
+      ],
+      "note": "Use this to watch patterns for retrieval, long-context workflows, and user-specific state."
+    },
+    {
+      "label": "Applied workflow UX",
+      "keywords": [
+        "assistant",
+        "workflow",
+        "application",
+        "product",
+        "enterprise"
+      ],
+      "note": "Use this to identify product patterns that make AI tools easier to adopt in real work."
+    },
+    {
+      "label": "Safety, policy, and governance",
+      "keywords": [
+        "safety",
+        "ethics",
+        "policy",
+        "governance",
+        "privacy",
+        "risk"
+      ],
+      "note": "Use this to follow work that changes deployment risk, compliance, or evaluation boundaries."
+    }
+  ],
+  "low_signal_keywords": [
+    "marketing",
+    "hiring",
+    "fundraising",
+    "career",
+    "productivity",
+    "event"
+  ],
+  "recommended_tracks": [
+    {
+      "name": "OpenAI",
+      "channels": "GitHub activity, official news",
+      "focus": "frontier model releases, agent products, platform capabilities",
+      "why": "Example target for tracking product launches, platform APIs, and agent workflows."
+    },
+    {
+      "name": "Google DeepMind",
+      "channels": "GitHub activity, official blog",
+      "focus": "model research, multimodal reasoning, evaluation",
+      "why": "Example target for model research, benchmarks, and research-to-product translation."
+    }
+  ],
+  "digest_filter_label": "AI research and product updates",
+  "main_empty_text": "No new items matched the current focus profile after dedupe and filtering.",
+  "secondary_section_title": "Secondary Insights",
+  "secondary_empty_text": "No items matched the secondary insight rules.",
+  "secondary_judgment_prompt": "Evaluate whether this changes product, research, market, investment, or learning priorities.",
+  "downgrade_note": "Current items look weakly related to the focus profile; consider lowering priority or removing this source.",
+  "item_template": [
+    "### {person_name} | {title}",
+    "- Date: {published_date}",
+    "- Source: {source_label} ({source_type})",
+    "- Background: {background}",
+    "- What changed: {done}",
+    "- Method: {method}",
+    "- Result: {result}",
+    "- Link: {url}"
+  ]
+}

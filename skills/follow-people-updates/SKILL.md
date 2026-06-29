@@ -11,6 +11,8 @@ Maintain a persistent registry of people and source endpoints, then fetch only t
 
 The default registry lives at `assets/tracking-registry.json`. Override it for testing or per-project setups with `FOLLOW_PEOPLE_UPDATES_REGISTRY=/path/to/registry.json`.
 
+The optional focus profile lives at `assets/focus-profile.json`. It controls digest relevance, secondary insight rules, recommended tracks, low-signal heuristics, and item output templates. Override it with `FOLLOW_PEOPLE_UPDATES_FOCUS_PROFILE=/path/to/focus-profile.json` or pass `--focus-profile` to `scripts/generate_daily_digest.py`.
+
 Current channel rule:
 
 1. X profile and search sources are kept in the registry, but are temporarily deferred from automatic scanning.
@@ -18,7 +20,9 @@ Current channel rule:
 
 ## Default Output
 
-When the user asks for a digest, default to the last 30 days and write one block per result with this shape:
+When the user asks for a digest, use the current focus profile when one is available. `assets/focus-profile.json` controls relevance keywords, secondary insight rules, low-signal heuristics, recommended tracks, and the `item_template` used by `scripts/generate_daily_digest.py`.
+
+If no focus profile is available, default to the last 30 days and write one block per result with this shape:
 
 ```text
 人名
@@ -50,7 +54,7 @@ Requirements:
 For YouTube items:
 
 1. Prefer `youtube-channel` sources over plain channel pages so new videos can be fetched automatically.
-2. First judge whether the video is relevant to the current interest profile from its title, description, and tags. For the current workflow, default that profile to AI-related topics, including technical AI work and AI-centered organization, management, adoption, governance, or workflow topics, unless the user overrides it.
+2. First judge whether the video is relevant to the current focus profile from its title, description, and tags. If no focus profile is configured, default to AI-related topics, including technical AI work and AI-centered organization, management, adoption, governance, or workflow topics.
 3. If a YouTube item is not relevant, do not write it to the markdown digest.
 4. Before summarizing a delivered video, run `scripts/fetch_youtube_transcript.py --url <video-url>` when a transcript is available.
 5. Use the transcript plus the video title, description, and tags to produce the `背景 / 做了什么 / 方法 / 结果` summary.
@@ -70,6 +74,26 @@ Rules:
 5. Use a stable archive path when the user does not specify one. Default to `news/daily-digest-YYYY-MM-DD.md` under the current workspace, using the execution date in the filename.
 
 ## Manage The Registry
+
+Tracked people and sources are user-confirmed inputs. Before adding a source, verify that the profile, channel, organization, author query, or feed URL actually belongs to the intended person or organization. The management commands edit the registry, but they do not prove identity.
+
+Minimum input for a tracked person:
+
+1. Public display name.
+2. Kind: `scholar`, `engineer`, `mixed`, or `other`.
+3. Notes explaining why this target is useful.
+4. At least one confirmed source endpoint.
+
+Source confirmation guidance:
+
+- GitHub user: confirm the username, then use `github-user-events`.
+- GitHub organization: confirm the org slug, then use `github-org-repos`.
+- YouTube: confirm the official channel URL, then use `youtube-channel`.
+- arXiv: confirm the author spelling, then use `arxiv-author`.
+- Crossref: confirm the author query is specific enough; expect noisy matches.
+- Google Scholar: confirm the profile URL and `user` id, then use `google-scholar`.
+- Official blogs/news: prefer `rss` or `atom`; use `news-index` or `web-page` when no feed exists.
+- X/Twitter or pages without reliable public feeds: use `web-page`; these are manual/deferred sources.
 
 Initialize the registry before first use:
 
@@ -239,3 +263,4 @@ Use `web-page` for X profiles, X searches, YouTube search pages, and hot-post da
 ### assets/
 
 - `assets/tracking-registry.json`: Persistent watchlist and per-source state.
+- `assets/focus-profile.json`: Private relevance and digest-format profile.

@@ -8,6 +8,7 @@ venv/
 
 # Private runtime state. Use the example file as a template.
 skills/follow-people-updates/assets/tracking-registry.json
+skills/follow-people-updates/assets/focus-profile.json
 news/daily-digest-*.md
 news/history-digest-*.md
 
