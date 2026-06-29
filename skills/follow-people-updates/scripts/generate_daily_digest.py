@@ -20,7 +20,9 @@ YOUTUBE_TRANSCRIPT_PATH = SCRIPT_DIR / "fetch_youtube_transcript.py"
 REGISTRY_PATH = SKILL_DIR / "assets" / "tracking-registry.json"
 USER_AGENT = "Mozilla/5.0"
 
-AI_KEYWORDS = [
+# Example focus profile. Replace these terms with the topics you actually care
+# about, such as climate tech, biotech, startups, education, security, or policy.
+FOCUS_KEYWORDS = [
     "ai", "artificial intelligence", "llm", "language model", "vision-language",
     "agent", "agentic", "reasoning", "benchmark", "evaluation", "alignment",
     "safety", "ethics", "governance", "privacy", "research", "preprint",
@@ -28,26 +30,29 @@ AI_KEYWORDS = [
     "robot", "robotic", "embodied", "multimodal", "dataset", "foundation model",
 ]
 
-IYKYK_RULES = [
+# Example secondary insight rules. These turn a matched item into a short
+# "why this matters" note. Replace the labels, keywords, and notes with your
+# own project goals or audience needs.
+SECONDARY_INSIGHT_RULES = [
     (
-        "Agent reliability",
+        "Agent reliability and evaluation",
         ["agent", "agentic", "reasoning", "benchmark", "evaluation", "collapse", "safety"],
-        "可借鉴到 IYKYK 的 agent 评测与守护层：先定义可观测的失败模式，再给 session 内陪伴和建议加可验证指标。",
+        "Use this to track how teams measure agent failures, reliability, and guardrail quality.",
     ),
     (
         "Memory and personalization",
         ["memory", "retrieval", "rag", "knowledge", "document", "personalization", "long-context"],
-        "可借鉴到 IYKYK 的状态映射与长期支持：把用户上下文、历史 session 和记忆提取拆开治理，而不是全塞进主对话。",
+        "Use this to watch patterns for retrieval, long-context workflows, and user-specific state.",
     ),
     (
-        "Companion UX",
-        ["assistant", "companion", "workflow", "application", "product", "user"],
-        "可借鉴到 IYKYK 的 companion 设计：优先服务进入 session、降低中断、强化陪伴感，而不是抢主任务。",
+        "Applied workflow UX",
+        ["assistant", "workflow", "application", "product", "user", "enterprise"],
+        "Use this to identify product patterns that make AI tools easier to adopt in real work.",
     ),
     (
-        "Safety and ethics",
-        ["safety", "ethics", "policy", "governance", "privacy", "harm", "bias", "clinical"],
-        "可借鉴到 IYKYK 的心理场景边界：对高风险内容做单独监测与降级，避免把温暖陪伴误做成高风险判断。",
+        "Safety, policy, and governance",
+        ["safety", "ethics", "policy", "governance", "privacy", "harm", "bias", "risk"],
+        "Use this to follow work that changes deployment risk, compliance, or evaluation boundaries.",
     ),
 ]
 
@@ -91,9 +96,9 @@ def item_text(item):
     return " ".join(part for part in [item.get("title"), item.get("summary")] if part).lower()
 
 
-def is_ai_related(item):
+def is_focus_related(item):
     text = item_text(item)
-    return any(keyword in text for keyword in AI_KEYWORDS) or item.get("preference_score", 0) > 0
+    return any(keyword in text for keyword in FOCUS_KEYWORDS) or item.get("preference_score", 0) > 0
 
 
 def split_summary_fields(summary: str):
@@ -432,6 +437,7 @@ def summarize_scan_review(results, window_label: str):
 def prune_candidates(registry, results):
     notes_by_name = {person["name"]: (person.get("notes") or "") for person in registry.get("people", [])}
     candidates = []
+    low_signal_keywords = ["marketing", "hiring", "fundraising", "career", "productivity", "event"]
     for person in results:
         combined = " ".join(
             filter(
@@ -441,8 +447,8 @@ def prune_candidates(registry, results):
                 + [item.get("summary", "") or "" for source in person.get("sources", []) for item in source.get("items", [])],
             )
         ).lower()
-        if any(keyword in combined for keyword in ["productivity", "founder", "board", "career", "psychology"]):
-            if not any(keyword in combined for keyword in ["llm", "model", "agent", "benchmark", "research", "ai ", "artificial intelligence"]):
+        if any(keyword in combined for keyword in low_signal_keywords):
+            if not any(keyword in combined for keyword in FOCUS_KEYWORDS):
                 candidates.append(person["person_name"])
     return sorted(set(candidates))
 
@@ -453,37 +459,37 @@ def recommended_tracks():
             "name": "OpenAI",
             "channels": "GitHub activity, official news",
             "focus": "frontier model releases, agent products, platform capabilities",
-            "why": "对补 AI 产品判断和 IYKYK 的产品交互范式最直接。",
+            "why": "Example target for tracking product launches, platform APIs, and agent workflows.",
         },
         {
             "name": "Google DeepMind",
             "channels": "GitHub activity, official blog",
             "focus": "Gemini model research, multimodal reasoning, evaluation",
-            "why": "适合补模型能力边界、benchmark 和 research-to-product 转化视角。",
+            "why": "Example target for model research, benchmarks, and research-to-product translation.",
         },
         {
             "name": "DeepSeek",
             "channels": "GitHub activity, official site",
-            "focus": "开源模型、推理与训练工程",
-            "why": "对理解高性价比模型、推理能力和 infra 取舍很有帮助。",
+            "focus": "open models, reasoning, training and inference engineering",
+            "why": "Example target for open model releases and infrastructure tradeoffs.",
         },
         {
             "name": "Qwen",
             "channels": "GitHub activity, official site",
-            "focus": "开源模型家族、agent/tool use、长上下文",
-            "why": "和 IYKYK 的 agent 能力、实用落地距离近，参考价值高。",
+            "focus": "open model families, agent/tool use, long context",
+            "why": "Example target for agent capabilities and practical open-source releases.",
         },
         {
             "name": "Kimi",
             "channels": "GitHub activity, official site",
-            "focus": "产品化 AI assistant、检索与长上下文体验",
-            "why": "更贴近 to-C AI 产品设计和陪伴式交互，适合参考产品层做法。",
+            "focus": "consumer AI assistants, retrieval, long-context UX",
+            "why": "Example target for product-layer assistant and search experiences.",
         },
         {
             "name": "MiniMax",
             "channels": "GitHub activity, official site",
-            "focus": "多模态模型与消费级 AI 产品",
-            "why": "对完善 IYKYK 的多模态与 companion 体验有启发。",
+            "focus": "multimodal models and consumer AI products",
+            "why": "Example target for multimodal and consumer-facing AI patterns.",
         },
     ]
 
@@ -501,9 +507,9 @@ def read_existing_markers(output_dir: Path, exclude_path: Path = None):
     return markers
 
 
-def build_iykyk_note(item):
+def build_secondary_insight(item):
     text = item_text(item)
-    for label, keywords, note in IYKYK_RULES:
+    for label, keywords, note in SECONDARY_INSIGHT_RULES:
         if any(keyword in text for keyword in keywords):
             return label, note
     return None, None
@@ -550,6 +556,7 @@ def enrich_item(item, transcript_state):
 
 
 def format_item_block(item):
+    """Customize this function to change the digest output structure."""
     published = parse_date(item.get("published_at"))
     published_str = published.strftime("%Y-%m-%d") if published else "日期未明确"
     fields = item.get("summary_fields") or split_summary_fields(item.get("summary"))
@@ -568,7 +575,7 @@ def format_item_block(item):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate a dated AI-focused daily digest.")
+    parser = argparse.ArgumentParser(description="Generate a dated focus-filtered daily digest.")
     parser.add_argument("--days", type=int, default=1)
     parser.add_argument("--limit", type=int, default=3)
     parser.add_argument("--max-items", type=int, default=0, help="Maximum digest items to include; 0 means no cap.")
@@ -589,8 +596,8 @@ def main():
     manual_items.extend(parse_claude_blog("https://claude.com/blog", today))
     items.extend(manual_items)
 
-    ai_items = [item for item in items if is_ai_related(item)]
-    ai_items.sort(
+    focus_items = [item for item in items if is_focus_related(item)]
+    focus_items.sort(
         key=lambda item: (
             item.get("preference_score", 0),
             item.get("published_at") or "",
@@ -600,20 +607,20 @@ def main():
     )
 
     markers = read_existing_markers(output_dir, exclude_path=output_path)
-    ai_items = dedupe_items(ai_items, markers)
+    focus_items = dedupe_items(focus_items, markers)
 
     if args.max_items and args.max_items > 0:
-        ai_items = ai_items[:args.max_items]
+        focus_items = focus_items[:args.max_items]
 
     transcript_state = {"count": 0, "limit": 2}
-    ai_items = [enrich_item(item, transcript_state) for item in ai_items]
+    focus_items = [enrich_item(item, transcript_state) for item in focus_items]
 
-    iykyk_items = []
-    for item in ai_items:
-        label, note = build_iykyk_note(item)
+    secondary_items = []
+    for item in focus_items:
+        label, note = build_secondary_insight(item)
         if label:
-            iykyk_items.append((item, label, note))
-    iykyk_items = iykyk_items[:5]
+            secondary_items.append((item, label, note))
+    secondary_items = secondary_items[:5]
     window_label = "最近24小时" if args.days == 1 else f"最近{args.days}天"
     scanned_no_updates, failed_sources, not_scanned = summarize_scan_review(raw_results, window_label)
     prune_list = prune_candidates(registry, raw_results)
@@ -623,7 +630,7 @@ def main():
         f"# Daily Digest {day_label}",
         "",
         f"- 生成时间：{today.isoformat()}",
-        f"- 过滤范围：仅保留 AI 相关信息，覆盖底层技术、应用、伦理、科研。",
+        f"- 过滤范围：仅保留当前关注主题相关信息；可在脚本顶部的 `FOCUS_KEYWORDS` 中调整。",
         f"- 时间窗口：{window_label}（按执行时刻向前回看）。",
         f"- 偏好：{', '.join(preferences.get('themes', [])) or '无'}",
         f"- Source 上限：每个 source 最多抓 {args.limit} 条。",
@@ -633,27 +640,27 @@ def main():
         "",
     ]
 
-    if not ai_items:
-        lines.append("本次没有新的 AI 相关条目通过去重与筛选。")
+    if not focus_items:
+        lines.append("本次没有新的关注主题相关条目通过去重与筛选。")
     else:
-        for item in ai_items:
+        for item in focus_items:
             lines.append(format_item_block(item))
             lines.append("")
 
     lines.extend([
-        "## IYKYK",
+        "## Secondary Insights",
         "",
     ])
-    if not iykyk_items:
-        lines.append("本次没有足够贴近 IYKYK 方向的新条目。")
+    if not secondary_items:
+        lines.append("本次没有命中 secondary insight 规则的新条目。")
     else:
-        for item, label, note in iykyk_items:
+        for item, label, note in secondary_items:
             lines.extend(
                 [
                     f"### {item['person_name']} | {item['title']}",
                     f"- 重点关注：{label}",
                     f"- 启发：{note}",
-                    f"- 对产品的意义：优先评估它是否能提升 session 进入率、陪伴感稳定性、状态映射精度，或 agent 安全边界。",
+                    f"- 进一步判断：按你的项目目标评估它是否影响产品、研究、市场、投资或学习优先级。",
                     f"- 来源链接：{item.get('url') or '未明确说明'}",
                     "",
                 ]
@@ -683,7 +690,7 @@ def main():
     ])
     if prune_list:
         for name in prune_list:
-            lines.append(f"- {name}：当前内容与 AI 模型、agent、infra 或 IYKYK 产品方向关联偏弱，可考虑移出主追踪列表。")
+            lines.append(f"- {name}：当前内容与关注主题关联偏弱，可考虑移出主追踪列表或降低优先级。")
     else:
         lines.append("- 暂无明显建议停更的人。")
 

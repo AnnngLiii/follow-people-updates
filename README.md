@@ -64,6 +64,45 @@ The wrapper resolves paths relative to the repository root. If you keep your reg
 export FOLLOW_PEOPLE_UPDATES_REGISTRY=/absolute/path/to/tracking-registry.json
 ```
 
+## Customize The Digest Generator
+
+`skills/follow-people-updates/scripts/generate_daily_digest.py` is an opinionated example, not a fixed product. It includes sample focus targets so users can see where to edit.
+
+This script reads your private `skills/follow-people-updates/assets/tracking-registry.json`, so create that file from the example before running it.
+
+Common places to customize:
+
+- `FOCUS_KEYWORDS`: the main topic filter. Replace the example AI terms with your own focus, such as climate tech, biotech, security, education, policy, investing, or a specific product category.
+- `SECONDARY_INSIGHT_RULES`: optional "why this matters" rules. Change the labels, keywords, and notes to match your project goals or audience.
+- `recommended_tracks()`: example people, labs, companies, or channels to suggest adding next.
+- `prune_candidates()`: low-signal heuristics for suggesting which tracked people or sources to downgrade.
+- `format_item_block(item)`: the Markdown output structure for each delivered item.
+
+The default `format_item_block(item)` writes:
+
+```text
+### Person | Title
+- 日期：YYYY-MM-DD
+- 来源类型：Source label (source-type)
+- 背景：...
+- 做了什么：...
+- 方法：...
+- 结果：...
+- 来源链接：...
+```
+
+Change this function if you want a different format, language, section order, scoring field, short-form summary, or newsletter-ready output.
+
+Generate a digest from the current registry:
+
+```bash
+python3 skills/follow-people-updates/scripts/generate_daily_digest.py \
+  --days 3 \
+  --limit 5 \
+  --max-items 10 \
+  --output-dir news
+```
+
 ## Manage The Registry
 
 List tracked people and sources:

@@ -44,7 +44,7 @@ Requirements:
    - which channels were scanned but had no updates
    - which channels failed
    - which channels were not scanned
-   - which tracked people look low-value for the current AI / IYKYK focus
+   - which tracked people look low-value for the current focus profile
    - which new people or labs are worth following next and why
 
 For YouTube items:
