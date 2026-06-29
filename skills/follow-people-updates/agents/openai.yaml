@@ -1,0 +1,4 @@
+interface:
+  display_name: "Follow People Updates"
+  short_description: "Track papers, blogs, and GitHub updates"
+  default_prompt: "Use $follow-people-updates to track recent papers, blog posts, and GitHub activity for people I follow."

@@ -1,0 +1,27 @@
+version = 1
+id = "daily-people-updates"
+kind = "cron"
+name = "Daily people updates"
+prompt = """
+Use `skills/follow-people-updates/assets/tracking-registry.json` as the tracked people registry source of truth every run.
+
+For scripted fetches, set `FOLLOW_PEOPLE_UPDATES_REGISTRY` to that path and prefer the wrapper `scripts/follow_people_updates_fetch.sh`, which invokes `skills/follow-people-updates/scripts/fetch_updates.py`.
+
+Use `FOLLOW_PEOPLE_UPDATES_REQUEST_TIMEOUT=8` and `FOLLOW_PEOPLE_UPDATES_SOURCE_TIMEOUT=12` unless there is a concrete reason to override them. Run the structured fetch as `--json --new-only --days 3 --limit 20` and allow up to 180 seconds of wall-clock wait before declaring it failed.
+
+Treat valid JSON from the structured fetch as the primary result, even when individual sources have `error`, `manual`, `deferred`, or mixed statuses. Treat the structured fetch as failed only when the wrapper exits non-zero, exceeds 180 seconds without returning JSON, or returns broad DNS/name-resolution/source-level failures across networked sources. Google Scholar `429` responses are manual web-fallback cases for those sources only.
+
+Only deliver items from the last 3 days that have not been delivered in previous runs. Use registry state plus existing `news/daily-digest-*.md` files as dedupe sources. Before sending results, skip any item whose source URL or stable title already appears in those digest files.
+
+Append the current run to `news/daily-digest-YYYY-MM-DD.md` in Markdown. If no new items remain after dedupe, append a short note saying no new items were delivered.
+
+For each delivered item, format the output as: person name, output title, a short introduction with background, what was done, method, and result, then the source link. Prefer primary sources and official pages when expanding sparse feed metadata.
+
+If the structured fetch truly fails, re-check affected recoverable source types from the registry, especially `youtube-channel`, `google-scholar`, `news-index`, and other machine-readable network sources, using targeted preview checks (`--no-write`) or direct source-page verification as needed.
+"""
+status = "ACTIVE"
+rrule = "RRULE:FREQ=WEEKLY;BYHOUR=10;BYMINUTE=0;BYDAY=MO,TU,WE,TH,FR"
+model = "gpt-5.4"
+reasoning_effort = "high"
+execution_environment = "local"
+cwds = ["."]

@@ -1,0 +1,135 @@
+{
+  "version": 2,
+  "defaults": {
+    "max_seen_ids_per_source": 100
+  },
+  "preferences": {
+    "themes": [
+      "ai-infra",
+      "applications",
+      "agents",
+      "research"
+    ],
+    "keyword_boosts": [
+      "llm",
+      "agent",
+      "benchmark",
+      "research"
+    ],
+    "keyword_penalties": [
+      "productivity"
+    ]
+  },
+  "people": [
+    {
+      "id": "andrej-karpathy",
+      "name": "Andrej Karpathy",
+      "kind": "engineer",
+      "notes": "Example engineer profile with GitHub and YouTube sources.",
+      "sources": [
+        {
+          "id": "github-activity",
+          "type": "github-user-events",
+          "label": "GitHub activity",
+          "enabled": true,
+          "url": null,
+          "params": {
+            "username": "karpathy"
+          },
+          "seen_ids": [],
+          "last_checked_at": null,
+          "resolution": {}
+        },
+        {
+          "id": "youtube-channel",
+          "type": "youtube-channel",
+          "label": "YouTube channel",
+          "enabled": true,
+          "url": "https://www.youtube.com/@AndrejKarpathy",
+          "params": {},
+          "seen_ids": [],
+          "last_checked_at": null,
+          "resolution": {}
+        }
+      ],
+      "identities": {}
+    },
+    {
+      "id": "openai",
+      "name": "OpenAI",
+      "kind": "other",
+      "notes": "Example organization with official news and GitHub repository scanning.",
+      "sources": [
+        {
+          "id": "official-news",
+          "type": "news-index",
+          "label": "Official news",
+          "enabled": true,
+          "url": "https://openai.com/news/rss.xml",
+          "params": {},
+          "seen_ids": [],
+          "last_checked_at": null,
+          "resolution": {}
+        },
+        {
+          "id": "github-repositories",
+          "type": "github-org-repos",
+          "label": "GitHub repositories",
+          "enabled": true,
+          "url": "https://github.com/openai",
+          "params": {
+            "org": "openai"
+          },
+          "seen_ids": [],
+          "last_checked_at": null,
+          "resolution": {}
+        }
+      ],
+      "identities": {}
+    },
+    {
+      "id": "fei-fei-li",
+      "name": "Fei-Fei Li",
+      "kind": "scholar",
+      "notes": "Example scholar profile with arXiv and Crossref sources.",
+      "sources": [
+        {
+          "id": "arxiv-author",
+          "type": "arxiv-author",
+          "label": "arXiv author",
+          "enabled": true,
+          "url": null,
+          "params": {
+            "author": "Fei-Fei Li"
+          },
+          "seen_ids": [],
+          "last_checked_at": null,
+          "resolution": {}
+        },
+        {
+          "id": "crossref-author",
+          "type": "crossref-author",
+          "label": "Crossref author",
+          "enabled": true,
+          "url": null,
+          "params": {
+            "author": "Fei-Fei Li"
+          },
+          "seen_ids": [],
+          "last_checked_at": null,
+          "resolution": {}
+        }
+      ],
+      "identities": {
+        "author_names": {
+          "arxiv": [
+            "Fei-Fei Li"
+          ],
+          "crossref": [
+            "Fei-Fei Li"
+          ]
+        }
+      }
+    }
+  ]
+}
