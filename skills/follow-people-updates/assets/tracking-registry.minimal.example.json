@@ -1,0 +1,35 @@
+{
+  "version": 2,
+  "defaults": {
+    "max_seen_ids_per_source": 100
+  },
+  "preferences": {
+    "themes": [],
+    "keyword_boosts": [],
+    "keyword_penalties": []
+  },
+  "people": [
+    {
+      "id": "example-person",
+      "name": "Example Person",
+      "kind": "engineer",
+      "notes": "Replace this with why you want to track this person.",
+      "sources": [
+        {
+          "id": "github-activity",
+          "type": "github-user-events",
+          "label": "GitHub activity",
+          "enabled": true,
+          "url": null,
+          "params": {
+            "username": "octocat"
+          },
+          "seen_ids": [],
+          "last_checked_at": null,
+          "resolution": {}
+        }
+      ],
+      "identities": {}
+    }
+  ]
+}

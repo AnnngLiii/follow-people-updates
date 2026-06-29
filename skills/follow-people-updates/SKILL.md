@@ -13,6 +13,8 @@ The default registry lives at `assets/tracking-registry.json`. Override it for t
 
 The optional focus profile lives at `assets/focus-profile.json`. It controls digest relevance, secondary insight rules, recommended tracks, low-signal heuristics, and item output templates. Override it with `FOLLOW_PEOPLE_UPDATES_FOCUS_PROFILE=/path/to/focus-profile.json` or pass `--focus-profile` to `scripts/generate_daily_digest.py`.
 
+`scripts/generate_daily_digest.py` only uses registry items by default. Pass `--include-discovery` when the user explicitly wants extra built-in discovery sources such as GitHub trending and Claude blog parsing.
+
 Current channel rule:
 
 1. X profile and search sources are kept in the registry, but are temporarily deferred from automatic scanning.
@@ -263,4 +265,5 @@ Use `web-page` for X profiles, X searches, YouTube search pages, and hot-post da
 ### assets/
 
 - `assets/tracking-registry.json`: Persistent watchlist and per-source state.
+- `assets/tracking-registry.minimal.example.json`: Minimal one-person, one-source registry example.
 - `assets/focus-profile.json`: Private relevance and digest-format profile.

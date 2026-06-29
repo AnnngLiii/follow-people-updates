@@ -13,6 +13,7 @@ This repository is designed for local Codex-style automation, but the scripts ar
 - `skills/follow-people-updates/scripts/generate_daily_digest.py`: optional digest generator built on top of the fetcher.
 - `skills/follow-people-updates/references/source-types.md`: registry source schema and source-type notes.
 - `skills/follow-people-updates/assets/tracking-registry.example.json`: safe example registry.
+- `skills/follow-people-updates/assets/tracking-registry.minimal.example.json`: smallest possible registry template, with one person and one source.
 - `skills/follow-people-updates/assets/focus-profile.example.json`: safe example focus and output profile.
 - `scripts/follow_people_updates_fetch.sh`: portable wrapper for the fetcher.
 - `automations/daily-people-updates.example.toml`: example automation prompt and schedule.
@@ -45,6 +46,13 @@ Create your private registry from the example:
 
 ```bash
 cp skills/follow-people-updates/assets/tracking-registry.example.json \
+  skills/follow-people-updates/assets/tracking-registry.json
+```
+
+For the smallest possible starting point, use the minimal example instead:
+
+```bash
+cp skills/follow-people-updates/assets/tracking-registry.minimal.example.json \
   skills/follow-people-updates/assets/tracking-registry.json
 ```
 
@@ -142,6 +150,18 @@ python3 skills/follow-people-updates/scripts/generate_daily_digest.py \
   --max-items 10 \
   --registry skills/follow-people-updates/assets/tracking-registry.json \
   --focus-profile skills/follow-people-updates/assets/focus-profile.json \
+  --output-dir news
+```
+
+By default, the digest generator only uses items from your registry. To also include built-in discovery sources such as GitHub trending and Claude blog parsing, add `--include-discovery`:
+
+```bash
+python3 skills/follow-people-updates/scripts/generate_daily_digest.py \
+  --days 3 \
+  --limit 5 \
+  --registry skills/follow-people-updates/assets/tracking-registry.json \
+  --focus-profile skills/follow-people-updates/assets/focus-profile.json \
+  --include-discovery \
   --output-dir news
 ```
 

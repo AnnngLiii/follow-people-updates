@@ -636,6 +636,11 @@ def main():
     parser.add_argument("--output-dir", type=Path, default=None)
     parser.add_argument("--registry", type=Path, default=None, help="Path to a tracking-registry JSON file.")
     parser.add_argument("--focus-profile", type=Path, default=None, help="Path to a focus-profile JSON file.")
+    parser.add_argument(
+        "--include-discovery",
+        action="store_true",
+        help="Also include built-in discovery sources such as GitHub trending and Claude blog.",
+    )
     args = parser.parse_args()
 
     today = datetime.now(timezone.utc)
@@ -649,8 +654,9 @@ def main():
     registry = load_registry(registry_path)
     focus_profile, focus_profile_path = load_focus_profile(args.focus_profile.expanduser() if args.focus_profile else None)
     manual_items = []
-    manual_items.extend(parse_github_trending("https://github.com/trending", today))
-    manual_items.extend(parse_claude_blog("https://claude.com/blog", today))
+    if args.include_discovery:
+        manual_items.extend(parse_github_trending("https://github.com/trending", today))
+        manual_items.extend(parse_claude_blog("https://claude.com/blog", today))
     items.extend(manual_items)
 
     focus_items = [item for item in items if is_focus_related(item, focus_profile)]
@@ -693,6 +699,7 @@ def main():
         f"- 时间窗口：{window_label}（按执行时刻向前回看）。",
         f"- 偏好：{', '.join(preferences.get('themes', [])) or '无'}",
         f"- Source 上限：每个 source 最多抓 {args.limit} 条。",
+        f"- Discovery extras：{'enabled' if args.include_discovery else 'disabled'}",
         f"- Token 策略：YouTube 先看标题，最多对 2 条高相关视频拉 transcript；GitHub 只看标题和 README 摘要，不读全仓代码；网页类手工源只做轻量页级解析。",
         "",
         "## Main Digest",
